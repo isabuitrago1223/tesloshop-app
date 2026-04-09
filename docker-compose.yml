@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:14.3
+    container_name: teslo-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: TesloDB
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - teslo-network
+
+  backend:
+    build:
+      context: ./teslo-shop
+      dockerfile: Dockerfile
+      target: dev
+    container_name: teslo-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres123
+      DB_NAME: TesloDB
+      PORT: 3000
+      JWT_SECRET: supersecretjwt
+    depends_on:
+      - db
+    networks:
+      - teslo-network
+
+  frontend:
+    build:
+      context: ./angular-tesloshop
+      dockerfile: Dockerfile
+    container_name: teslo-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - teslo-network
+
+volumes:
+  postgres-data:
+
+networks:
+  teslo-network:
+    driver: bridge
